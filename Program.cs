@@ -4,6 +4,6 @@ class Program
 {
     static void Main(string[] args)
     {
-        //imi e foame
+        //la multi ani!
     }
 }

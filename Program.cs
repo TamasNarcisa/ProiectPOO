@@ -212,6 +212,34 @@ public class Pizzeria
             Console.WriteLine("Pizza nu a fost găsită.");
         }
     }
+    
+    // Funcționalități pentru gestionarea comenzilor
+    public void PlaseazaComanda(Client client, List<Pizza> pizzas, string tipLivrare)
+    {
+        var comandaNoua = new Comanda(client, pizzas, tipLivrare);
+        Comenzi.Add(comandaNoua);
+        client.IstoricComenzi.Add(comandaNoua);
+        Console.WriteLine($"Comanda pentru {client.Nume} a fost plasată cu succes!");
+        comandaNoua.AfisareComanda();
+    }
+
+    public void VizualizareIstoricComenziPizzerie()
+    {
+        Console.WriteLine("Istoric Comenzi Pizzerie:");
+        foreach (var comanda in Comenzi)
+        {
+            comanda.AfisareComanda();
+        }
+    }
+
+    public void VizualizareIstoricComenziClient(Client client)
+    {
+        Console.WriteLine($"Istoric Comenzi pentru {client.Nume}:");
+        foreach (var comanda in client.IstoricComenzi)
+        {
+            comanda.AfisareComanda();
+        }
+    }
 }
     
 public class Admin : Client
@@ -319,14 +347,21 @@ public class Comanda
     public void AfisareComanda()
     {
         Console.WriteLine($"Comanda pentru {Client.Nume}:");
+        decimal total = 0;
         foreach (var pizza in Pizzas)
         {
-            Console.WriteLine($"{pizza.Nume} ({pizza.Dimensiune}) - Pret: {pizza.CalcularePret()} RON");
+            decimal pretPizza = pizza.CalcularePret();
+            Console.WriteLine($"{pizza.Nume} ({pizza.Dimensiune}) - Pret: {pretPizza} RON");
+            total += pretPizza;
+        }
+        if (TipLivrare == "livrare")
+        {
+            total += 10; // Adăugăm taxă de livrare
         }
         Console.WriteLine($"Tip livrare: {TipLivrare}");
+        Console.WriteLine($"Total comanda: {total} RON");
     }
 }
-
 
 public class Program
 {
@@ -342,36 +377,47 @@ public class Program
         Console.WriteLine("Înregistrare client nou:");
         pizzeria.InregistrareClient("Ion Popescu", "+40701234567");  // Înregistrare client valid
         pizzeria.InregistrareClient("Maria Ionescu", "+40701234568");  // Înregistrare client valid
-        pizzeria.InregistrareClient("Ion Popescu", "+40701234567");  // Client cu același număr, va eșua
-        pizzeria.InregistrareClient("Client Invalid", "1234567890");  // Număr invalid
 
         // Autentificare administrator
         Console.WriteLine("\nAutentificare admin");
         var adminAutentificat = pizzeria.Autentificare("+40123456789", true);
         if (adminAutentificat != null)
         {
-            Console.WriteLine($"Bun venit, {adminAutentificat.Nume} (Administrator)!");
-            // Gestionarea meniului
-            var pizzaMargherita = new PizzaStandard("Margherita", Dimensiune.Medie);
-            var ingredientMozzarella = new Ingredient("Mozzarella", 4);
-            pizzaMargherita.Ingrediente.Add(ingredientMozzarella);
-
-            pizzeria.AdaugaPizzaInMeniu(adminAutentificat, pizzaMargherita);
-            pizzeria.VizualizareMeniu(adminAutentificat);
+            Console.WriteLine($"Bun venit, {adminAutentificat.Nume}!");  // Afișare mesaj pentru administrator
         }
 
-        // Autentificare client
-        Console.WriteLine("\nAutentificare client");
-        var clientAutentificat = pizzeria.Autentificare("+40701234567", false);
-        if (clientAutentificat != null)
+        // Creare și adăugare pizza în meniu
+        var pizzaMargherita = new PizzaStandard("Margherita", Dimensiune.Mare);
+        pizzaMargherita.Ingrediente.Add(new Ingredient("Mozzarella", 5));
+        pizzaMargherita.Ingrediente.Add(new Ingredient("Tomate", 3));
+        pizzeria.AdaugaPizzaInMeniu(admin, pizzaMargherita);
+
+        // Vizualizare meniu
+        pizzeria.VizualizareMeniu(admin);
+
+        // Modificarea unei pizze
+        var ingredienteNoua = new List<Ingredient>
         {
-            Console.WriteLine($"Bun venit, {clientAutentificat.Nume} (Client)!");
-            // Crearea unei comenzi
-            var pizzaPeperoni = new PizzaStandard("Peperoni", Dimensiune.Mare);
-            var ingredientPeperoni = new Ingredient("Peperoni", 6);
-            pizzaPeperoni.Ingrediente.Add(ingredientPeperoni);
-            var comandaClient = new Comanda(clientAutentificat, new List<Pizza> { pizzaPeperoni }, "livrare");
-            comandaClient.AfisareComanda();
-        }
+            new Ingredient("Mozzarella", 5),
+            new Ingredient("Pepperoni", 7),
+            new Ingredient("Olive", 4)
+        };
+        pizzeria.ModificaPizzaInMeniu(admin, "Margherita", Dimensiune.Mare, ingredienteNoua);
+
+        // Vizualizare ingrediente
+        pizzeria.VizualizareIngrediente(admin);
+
+        // Modificare preț ingredient
+        pizzeria.ModificaPretIngredient(admin, "Mozzarella", 6);
+        
+        // Creare și plasare comandă
+        var client = pizzeria.Clienți[0];  // Primul client
+        var comanda = new List<Pizza> { pizzaMargherita };
+        pizzeria.PlaseazaComanda(client, comanda, "livrare");
+
+        // Vizualizare istoricul comenzilor
+        pizzeria.VizualizareIstoricComenziPizzerie();
+        pizzeria.VizualizareIstoricComenziClient(client);
     }
+    
 }

@@ -240,6 +240,74 @@ public class Pizzeria
             comanda.AfisareComanda();
         }
     }
+    // 5. Raportare și statistici
+    public void VizualizareComenzi(Admin admin)
+    {
+        if (admin == null || !admin.ArePermisiuni())
+        {
+            Console.WriteLine("Acces refuzat. Doar administratorul poate vizualiza comenzile.");
+            return;
+        }
+
+        Console.WriteLine("Toate comenzile:");
+        foreach (var comanda in Comenzi)
+        {
+            comanda.AfisareComanda();
+        }
+    }
+
+    public void RaportComenziFinalizateInZi(Admin admin, DateTime data)
+    {
+        if (admin == null || !admin.ArePermisiuni())
+        {
+            Console.WriteLine("Acces refuzat. Doar administratorul poate vizualiza comenzile finalizate.");
+            return;
+        }
+
+        var comenziFinalizate = Comenzi.Where(c => c.DataComanda.Date == data.Date && c.EstComandaFinalizata).ToList();
+        Console.WriteLine($"Comenzi finalizate pe {data.ToShortDateString()}:");
+        foreach (var comanda in comenziFinalizate)
+        {
+            comanda.AfisareComanda();
+        }
+    }
+
+    public void RaportCeleMaiPopularePizze(Admin admin)
+    {
+        if (admin == null || !admin.ArePermisiuni())
+        {
+            Console.WriteLine("Acces refuzat. Doar administratorul poate vizualiza rapoartele.");
+            return;
+        }
+
+        var pizzaComandata = Comenzi
+            .SelectMany(c => c.Pizzas)
+            .GroupBy(p => p.Nume)
+            .OrderByDescending(g => g.Count())
+            .Take(5)
+            .ToList();
+
+        Console.WriteLine("Cele mai populare pizza comandate:");
+        foreach (var grup in pizzaComandata)
+        {
+            Console.WriteLine($"{grup.Key} - Comenzi: {grup.Count()}");
+        }
+    }
+
+    public void RaportVenituriPerioada(Admin admin, DateTime startDate, DateTime endDate)
+    {
+        if (admin == null || !admin.ArePermisiuni())
+        {
+            Console.WriteLine("Acces refuzat. Doar administratorul poate vizualiza veniturile.");
+            return;
+        }
+
+        var venituri = Comenzi
+            .Where(c => c.DataComanda >= startDate && c.DataComanda <= endDate)
+            .Sum(c => c.CalculareTotalComanda());
+        Console.WriteLine($"Venituri din perioada {startDate.ToShortDateString()} - {endDate.ToShortDateString()}: {venituri} RON");
+    }
+
 }
     
 public class Admin : Client
@@ -335,13 +403,17 @@ public class Comanda
     public Client Client { get; set; }
     public List<Pizza> Pizzas { get; set; }
     public string TipLivrare { get; set; }
-   
+    public DateTime DataComanda { get; set; }
+    public bool EstComandaFinalizata { get; set; }
 
     public Comanda(Client client, List<Pizza> pizzas, string tipLivrare)
     {
         Client = client;
         Pizzas=pizzas;
        TipLivrare = tipLivrare;
+       DataComanda = DateTime.Now;
+       EstComandaFinalizata = true; // Pentru exemplu, presupunem că toate comenzile sunt finalizate
+
     }
 
     public void AfisareComanda()
@@ -358,8 +430,22 @@ public class Comanda
         {
             total += 10; // Adăugăm taxă de livrare
         }
+        if (Client.EsteClientFidel())
+        {
+            total *= 0.9m; // Reducere de 10% pentru clientii fideli
+            Console.WriteLine("Reducere de 10% aplicată pentru client fidel.");
+        }
         Console.WriteLine($"Tip livrare: {TipLivrare}");
         Console.WriteLine($"Total comanda: {total} RON");
+    }
+    public decimal CalculareTotalComanda()
+    {
+        decimal total = Pizzas.Sum(pizza => pizza.CalcularePret());
+        if (TipLivrare == "livrare")
+        {
+            total += 10; // Taxă livrare
+        }
+        return total;
     }
 }
 

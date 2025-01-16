@@ -9,20 +9,19 @@ public class Pizzeria
     public string Adresa { get; set; }
     public List<Pizza> Meniu { get; set; }
     public List<Comanda> Comenzi { get; set; }
-    public List<Client> Clienți { get; set; }  // Lista de clienți
-    public Admin Administrator { get; set; }  // Administratorul pizzeriei
+    public List<Client> Clienți { get; set; }  
+    public Admin Administrator { get; set; }
 
-    public Pizzeria(string nume, string adresa,Admin admin)
+    public Pizzeria(string nume, string adresa, Admin admin)
     {
         Nume = nume;
         Adresa = adresa;
         Meniu = new List<Pizza>();
         Comenzi = new List<Comanda>();
-        Clienți = new List<Client>();  // Inițializăm lista de clienți
-        Administrator = admin;  // Setăm administratorul
+        Clienți = new List<Client>(); 
+        Administrator = admin; 
     }
-    
-    // Funcționalitate pentru autentificare client sau administrator
+
     public dynamic Autentificare(string telefon, bool esteAdmin)
     {
         if (esteAdmin)
@@ -35,7 +34,7 @@ public class Pizzeria
         }
     }
 
-    // Funcționalitate pentru înregistrarea unui client 
+   
     public void InregistrareClient(string nume, string telefon)
     {
         if (Clienți.Any(c => c.Telefon == telefon))
@@ -55,7 +54,7 @@ public class Pizzeria
         Console.WriteLine($"Clientul {clientNou.Nume} a fost înregistrat cu succes!");
     }
 
-    // Funcționalități pentru gestionarea meniului (doar pentru administratori)
+    
     public void VizualizareMeniu(Admin admin)
     {
         if (admin == null || !admin.ArePermisiuni())
@@ -72,7 +71,7 @@ public class Pizzeria
     }
    
 
-    // Celelalte metode din Pizzeria
+   
     public void AdaugaPizzaInMeniu(Admin admin, Pizza pizza)
     {
         if (admin == null || !admin.ArePermisiuni())
@@ -126,7 +125,7 @@ public class Pizzeria
         }
     }
   
-    // Funcționalități pentru gestionarea ingredientelor (doar pentru administratori)
+    
     public void VizualizareIngrediente(Admin admin)
     {
         if (admin == null || !admin.ArePermisiuni())
@@ -213,7 +212,7 @@ public class Pizzeria
         }
     }
     
-    // Funcționalități pentru gestionarea comenzilor
+    
     public void PlaseazaComanda(Client client, List<Pizza> pizzas, string tipLivrare)
     {
         var comandaNoua = new Comanda(client, pizzas, tipLivrare);
@@ -240,7 +239,7 @@ public class Pizzeria
             comanda.AfisareComanda();
         }
     }
-    // 5. Raportare și statistici
+   
     public void VizualizareComenzi(Admin admin)
     {
         if (admin == null || !admin.ArePermisiuni())
@@ -307,6 +306,43 @@ public class Pizzeria
             .Sum(c => c.CalculareTotalComanda());
         Console.WriteLine($"Venituri din perioada {startDate.ToShortDateString()} - {endDate.ToShortDateString()}: {venituri} RON");
     }
+    
+    
+    public void ScrieComenziInFisier(string caleFisier)
+    {
+        try
+        {
+            using (StreamWriter writer = new StreamWriter(caleFisier, false))
+            {
+                foreach (var comanda in Comenzi)
+                {
+                    writer.WriteLine($"Comanda pentru {comanda.Client.Nume}:");
+                    decimal total = 0;
+                    foreach (var pizza in comanda.Pizzas)
+                    {
+                        decimal pretPizza = pizza.CalcularePret();
+                        writer.WriteLine($"{pizza.Nume} ({pizza.Dimensiune}) - Pret: {pretPizza} RON");
+                        total += pretPizza;
+                    }
+                    if (comanda.TipLivrare == "livrare")
+                    {
+                        total += 10; 
+                    }
+                    if (comanda.Client.EsteClientFidel())
+                    {
+                        total *= 0.9m; 
+                    }
+                    writer.WriteLine($"Total: {total} RON");
+                    writer.WriteLine("----------------------------");
+                }
+            }
+            Console.WriteLine($"Comenzile au fost scrise în fișierul: {caleFisier}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Eroare la scrierea în fișier: {ex.Message}");
+        }
+    }
 
 }
     
@@ -316,7 +352,7 @@ public class Admin : Client
 
     public bool ArePermisiuni()
     {
-        return true;  // Administratorul are toate permisiunile
+        return true;  
     }
 }
 
@@ -412,7 +448,7 @@ public class Comanda
         Pizzas=pizzas;
        TipLivrare = tipLivrare;
        DataComanda = DateTime.Now;
-       EstComandaFinalizata = true; // Pentru exemplu, presupunem că toate comenzile sunt finalizate
+       EstComandaFinalizata = true; 
 
     }
 
@@ -428,11 +464,11 @@ public class Comanda
         }
         if (TipLivrare == "livrare")
         {
-            total += 10; // Adăugăm taxă de livrare
+            total += 10;
         }
         if (Client.EsteClientFidel())
         {
-            total *= 0.9m; // Reducere de 10% pentru clientii fideli
+            total *= 0.9m; 
             Console.WriteLine("Reducere de 10% aplicată pentru client fidel.");
         }
         Console.WriteLine($"Tip livrare: {TipLivrare}");
@@ -443,7 +479,7 @@ public class Comanda
         decimal total = Pizzas.Sum(pizza => pizza.CalcularePret());
         if (TipLivrare == "livrare")
         {
-            total += 10; // Taxă livrare
+            total += 10; 
         }
         return total;
     }
@@ -453,35 +489,34 @@ public class Program
 {
     public static void Main()
     {
-        // Crearea unui administrator
+      
         var admin = new Admin("Admin", "+40123456789");
-
-        // Crearea pizzeriei
+        
         var pizzeria = new Pizzeria("Pizza La Noi", "Strada Exemplu, 12", admin);
 
-        // Înregistrare client nou
+        
         Console.WriteLine("Înregistrare client nou:");
-        pizzeria.InregistrareClient("Ion Popescu", "+40701234567");  // Înregistrare client valid
-        pizzeria.InregistrareClient("Maria Ionescu", "+40701234568");  // Înregistrare client valid
+        pizzeria.InregistrareClient("Ion Popescu", "+40701234567");  
+        pizzeria.InregistrareClient("Maria Ionescu", "+40701234568");  
 
-        // Autentificare administrator
+       
         Console.WriteLine("\nAutentificare admin");
         var adminAutentificat = pizzeria.Autentificare("+40123456789", true);
         if (adminAutentificat != null)
         {
-            Console.WriteLine($"Bun venit, {adminAutentificat.Nume}!");  // Afișare mesaj pentru administrator
+            Console.WriteLine($"Bun venit, {adminAutentificat.Nume}!");  
         }
 
-        // Creare și adăugare pizza în meniu
+       
         var pizzaMargherita = new PizzaStandard("Margherita", Dimensiune.Mare);
         pizzaMargherita.Ingrediente.Add(new Ingredient("Mozzarella", 5));
         pizzaMargherita.Ingrediente.Add(new Ingredient("Tomate", 3));
         pizzeria.AdaugaPizzaInMeniu(admin, pizzaMargherita);
 
-        // Vizualizare meniu
+        
         pizzeria.VizualizareMeniu(admin);
 
-        // Modificarea unei pizze
+       
         var ingredienteNoua = new List<Ingredient>
         {
             new Ingredient("Mozzarella", 5),
@@ -489,21 +524,23 @@ public class Program
             new Ingredient("Olive", 4)
         };
         pizzeria.ModificaPizzaInMeniu(admin, "Margherita", Dimensiune.Mare, ingredienteNoua);
-
-        // Vizualizare ingrediente
+        
         pizzeria.VizualizareIngrediente(admin);
-
-        // Modificare preț ingredient
+        
         pizzeria.ModificaPretIngredient(admin, "Mozzarella", 6);
         
-        // Creare și plasare comandă
-        var client = pizzeria.Clienți[0];  // Primul client
+        
+        var client = pizzeria.Clienți[0]; 
         var comanda = new List<Pizza> { pizzaMargherita };
         pizzeria.PlaseazaComanda(client, comanda, "livrare");
 
-        // Vizualizare istoricul comenzilor
+        
         pizzeria.VizualizareIstoricComenziPizzerie();
         pizzeria.VizualizareIstoricComenziClient(client);
+        
+        Console.WriteLine("\n=== Scriere comenzi în fișier ===");
+        string caleFisier = @"C:\\Users\\Admin\\Desktop\\Pizza-poo\\pizza-poo_incercari\\comenzi.txt"; 
+        pizzeria.ScrieComenziInFisier(caleFisier);
     }
     
 }
